@@ -1,8 +1,9 @@
 import random
+import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-TOKEN = "8712337321:AAES6a7S9oa4x9l_FgFm-7bX9Vpv0XEqKf4"
+TOKEN = os.getenv("BOT_TOKEN")
 
 secret_number = random.randint(1,10)
 
@@ -34,4 +35,5 @@ app.add_handler(MessageHandler(filters.TEXT, guess))
 
 app.run_polling()
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     await update.message.reply_text("Guess numbers from 1-10")
