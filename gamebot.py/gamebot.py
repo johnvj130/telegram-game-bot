@@ -1,70 +1,48 @@
 import os
 import random
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-# Get bot token from environment variable
 TOKEN = os.getenv("BOT_TOKEN")
 
-# Store numbers for users
-user_numbers = {}
+numbers = {}
 
-# Start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    number = random.randint(1, 10)
-    user_numbers[user_id] = number
+    user = update.effective_user.id
+    numbers[user] = random.randint(1,10)
 
     await update.message.reply_text(
-        "Welcome to the Guessing Game!\n"
-        "I picked a number between 1 and 10.\n"
-        "Send a number to guess."
+        "Guess a number between 1 and 10"
     )
 
-# Guess handler
 async def guess(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
+    user = update.effective_user.id
 
-    if user_id not in user_numbers:
-        await update.message.reply_text("Type /start to begin the game.")
+    if user not in numbers:
+        await update.message.reply_text("Type /start first")
         return
 
     try:
-        user_guess = int(update.message.text)
+        g = int(update.message.text)
     except:
-        await update.message.reply_text("Send a number between 1 and 10.")
+        await update.message.reply_text("Send a number")
         return
 
-    secret = user_numbers[user_id]
+    n = numbers[user]
 
-    if user_guess == secret:
-        await update.message.reply_text("Correct! You win! 🎉\nType /start to play again.")
-        del user_numbers[user_id]
+    if g == n:
+        await update.message.reply_text("Correct!")
+        del numbers[user]
 
-    elif user_guess < secret:
-        await update.message.reply_text("Too low. Try again.")
+    elif g < n:
+        await update.message.reply_text("Too low")
 
     else:
-        await update.message.reply_text("Too high. Try again.")
+        await update.message.reply_text("Too high")
 
-# Help command
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "/start - start the game\n"
-        "Guess a number from 1 to 10."
-    )
+app = ApplicationBuilder().token(TOKEN).build()
 
-# Main function
-def main():
-    app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(CommandHandler("start", start))
+app.add_handler(MessageHandler(filters.TEXT, guess))
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, guess))
-
-    print("Bot is running...")
-    app.run_polling()
-
-# Run bot
-if __name__ == "__main__":
-    main()
+app.run_polling()
